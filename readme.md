@@ -56,9 +56,8 @@ Para compilar e rodar este projeto, você precisará de um compilador C++, como 
 2.  **Compile o código-fonte:**
     Abra o terminal na pasta do projeto e execute o seguinte comando. Isso criará um arquivo executável chamado `meu_programa`.
     ```bash
-    g++ seu_arquivo.cpp -o meu_programa
+    g++ mergecompleto.cpp -o meu_programa
     ```
-    *(Substitua `seu_arquivo.cpp` pelo nome real do seu arquivo C++)*
 
 3.  **Execute o programa:**
     ```bash
