@@ -5,9 +5,9 @@
 
 using namespace std;
 
-// FUNÇÕES OBRIGATÓRIAS DO PROJETO E AUXILIARES
+// --- FUNÇÕES AUXILIARES E DE MENU ---
+
 void limparBufferCin() {
-    // Ignora até 10000 caracteres ou até encontrar um '\n'
     cin.ignore(10000, '\n'); 
 }
 
@@ -42,12 +42,12 @@ string lerNovoRegistro() {
         cout << titulos[i] << ": ";
         getline(cin, campos[i]);
 
-        if (i == 1) { // Period (ex: 2018.12)
+        if (i == 1) { // Period
             while (!ehNumero(campos[i], true)) {
                 cout << "Entrada invalida. Digite um numero (ex: 2018.12): ";
                 getline(cin, campos[i]);
             }
-        } else if (i == 2 || i == 5) { // Data_value e Magnitude (inteiros)
+        } else if (i == 2 || i == 5) { // Data_value e Magnitude
             while (!ehNumero(campos[i], false)) {
                 cout << "Entrada invalida. Digite apenas numeros inteiros: ";
                 getline(cin, campos[i]);
@@ -62,13 +62,10 @@ string lerNovoRegistro() {
     return linha;
 }
 
-
-// --- FUNÇÕES DE OPERAÇÃO DO MENU (Refatoradas)---
-
-void imprimirTodosRegistros(const string& nomeArquivo) {
-    ifstream arq(nomeArquivo, ios::binary);
+void imprimirTodosRegistros() {
+    ifstream arq("dados.bin", ios::binary);
     if (!arq.is_open()) {
-        cout << "Erro: nao foi possivel abrir o arquivo " << nomeArquivo << endl;
+        cout << "ERRO: O arquivo 'dados.bin' nao foi encontrado. Tente reiniciar o programa.\n";
     } else {
         cout << "\n--- Conteudo do Arquivo Binario ---\n";
         int pos = 0;
@@ -86,20 +83,22 @@ void imprimirTodosRegistros(const string& nomeArquivo) {
     }
 }
 
-void visualizarRegistros(const string& nomeArquivo) {
-    int inicio, fim;
-    cout << "Digite a posicao inicial: ";
-    cin >> inicio;
-    cout << "Digite a posicao final: ";
-    cin >> fim;
-
-    if (inicio < 0 || fim < inicio) {
-        cout << "Erro: intervalo de posicoes invalido.\n";
+void visualizarRegistros() {
+    ifstream arqCheck("dados.bin");
+    if (!arqCheck.is_open()) {
+        cout << "ERRO: O arquivo 'dados.bin' nao foi encontrado. Tente reiniciar o programa.\n";
     } else {
-        ifstream arq(nomeArquivo, ios::binary);
-        if (!arq.is_open()) {
-            cout << "Erro: nao foi possivel abrir o arquivo " << nomeArquivo << endl;
+        arqCheck.close();
+        int inicio, fim;
+        cout << "Digite a posicao inicial: ";
+        cin >> inicio;
+        cout << "Digite a posicao final: ";
+        cin >> fim;
+
+        if (inicio < 0 || fim < inicio) {
+            cout << "Erro: intervalo de posicoes invalido.\n";
         } else {
+            ifstream arq("dados.bin", ios::binary);
             cout << "\n--- Visualizando Registros de " << inicio << " a " << fim << " ---\n";
             int pos = 0;
             int len;
@@ -122,7 +121,7 @@ void visualizarRegistros(const string& nomeArquivo) {
     }
 }
 
-void adicionarRegistro(const string& nomeArquivo) {
+void adicionarRegistro() {
     int pos_inserir;
     cout << "Digite a posicao onde deseja inserir o novo registro: ";
     cin >> pos_inserir;
@@ -133,14 +132,9 @@ void adicionarRegistro(const string& nomeArquivo) {
         string novo_registro = lerNovoRegistro();
         int len_novo = novo_registro.length();
 
-        ifstream arq_orig(nomeArquivo, ios::binary);
+        ifstream arq_orig("dados.bin", ios::binary);
         if (!arq_orig.is_open()) {
-            cout << "Arquivo '" << nomeArquivo << "' nao encontrado. Criando um novo.\n";
-            ofstream arq_novo(nomeArquivo, ios::binary);
-            arq_novo.write(reinterpret_cast<const char*>(&len_novo), sizeof(int));
-            arq_novo.write(novo_registro.c_str(), len_novo);
-            arq_novo.close();
-            cout << "Registro adicionado na posicao 0.\n";
+             cout << "ERRO: O arquivo 'dados.bin' nao foi encontrado. Tente reiniciar o programa.\n";
         } else {
             ofstream arq_temp("temp_add.bin", ios::binary | ios::trunc);
             int pos_atual = 0;
@@ -177,13 +171,13 @@ void adicionarRegistro(const string& nomeArquivo) {
             arq_orig.close();
             arq_temp.close();
 
-            remove(nomeArquivo.c_str());
-            rename("temp_add.bin", nomeArquivo.c_str());
+            remove("dados.bin");
+            rename("temp_add.bin", "dados.bin");
         }
     }
 }
 
-void alterarRegistro(const string& nomeArquivo) {
+void alterarRegistro() {
     int pos_alterar;
     cout << "Digite a posicao do registro que deseja alterar: ";
     cin >> pos_alterar;
@@ -191,9 +185,9 @@ void alterarRegistro(const string& nomeArquivo) {
     if (pos_alterar < 0) {
         cout << "Erro: posicao invalida.\n";
     } else {
-        ifstream arq_orig(nomeArquivo, ios::binary);
+        ifstream arq_orig("dados.bin", ios::binary);
         if (!arq_orig.is_open()) {
-            cout << "Erro: nao foi possivel abrir o arquivo " << nomeArquivo << endl;
+            cout << "ERRO: O arquivo 'dados.bin' nao foi encontrado. Tente reiniciar o programa.\n";
         } else {
             ofstream arq_temp("temp_alt.bin", ios::binary | ios::trunc);
             int pos_atual = 0;
@@ -225,15 +219,15 @@ void alterarRegistro(const string& nomeArquivo) {
                 cout << "Erro: posicao " << pos_alterar << " nao encontrada no arquivo.\n";
                 remove("temp_alt.bin");
             } else {
-                remove(nomeArquivo.c_str());
-                rename("temp_alt.bin", nomeArquivo.c_str());
+                remove("dados.bin");
+                rename("temp_alt.bin", "dados.bin");
                 cout << "Registro alterado com sucesso!\n";
             }
         }
     }
 }
 
-void trocarRegistros(const string& nomeArquivo) {
+void trocarRegistros() {
     int pos1, pos2;
     cout << "Digite a primeira posicao para trocar: ";
     cin >> pos1;
@@ -249,9 +243,9 @@ void trocarRegistros(const string& nomeArquivo) {
             pos2 = temp;
         }
 
-        ifstream arq(nomeArquivo, ios::binary);
+        ifstream arq("dados.bin", ios::binary);
         if (!arq.is_open()) {
-            cout << "Erro: nao foi possivel abrir o arquivo " << nomeArquivo << endl;
+            cout << "ERRO: O arquivo 'dados.bin' nao foi encontrado. Tente reiniciar o programa.\n";
         } else {
             string reg1, reg2;
             int len1 = -1, len2 = -1;
@@ -297,8 +291,8 @@ void trocarRegistros(const string& nomeArquivo) {
                     pos_atual++;
                 }
                 arq_temp.close();
-                remove(nomeArquivo.c_str());
-                rename("temp_swap.bin", nomeArquivo.c_str());
+                remove("dados.bin");
+                rename("temp_swap.bin", "dados.bin");
                 cout << "Registros das posicoes " << pos1 << " e " << pos2 << " trocados com sucesso!\n";
             }
             arq.close();
@@ -306,71 +300,8 @@ void trocarRegistros(const string& nomeArquivo) {
     }
 }
 
-// --- FUNÇÃO PRINCIPAL DO MENU ---
 
-void menu() {
-    int escolha = 0;
-    const string arquivoBinario = "ordenado.bin";
-
-    do {
-        cout << "\n";
-        cout << "                      ########::                                                                                              \n";
-        cout << "                ####################::                                                                                        \n";
-        cout << "              ############################                                                                                    \n";
-        cout << "            ################################                                                                                  \n";
-        cout << "          ##########################mm########         MMMM++   MMMMMM     MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM     MMMMMMMMMMMMMM     \n";
-        cout << "        @@########################  ##########         MMMM++   MMMMMM     MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM   MMMMMMMMMMMMMMMM--   \n";
-        cout << "        ########################    ##########@@       MMMM++   MMMMMM     MMMMMMMM..................MMMMMM   MMMMMMMM     MMMMMMMM   \n";
-        cout << "      ######################MM  @@mm++############     MMMM++   MMMMMM     MMMMMM                   MMMMMM   MMMMMM           MMMMMM  \n";
-        cout << "      ####################    ####  ##############     MMMM++   MMMMMM     MMMMMM                   MMMMMM MMMMMM               MMMM  \n";
-        cout << "      ##################    ######  ################   MMMM++   MMMMMM     MMMMMM    ..MMMMMMMMMM++   MMMMMM MMMMmm     MMMM      MMMM  \n";
-        cout << "      ##############@@  MM##mm--##  ################   MMMM++   MMMMMM     MMMMMM    MMMMMMMMMMMM++   MMMMMM MMMM--   MMMMMM      MMMM  \n";
-        cout << "      ############    ####    ####  ################   MMMM++   MMMMMM     MMMMMM          MMMM++   MMMMMM MMMM--   MMMMMM      MMMM  \n";
-        cout << "      ##########    ####      ##  @@################   MMMM++   MMMMMM     MMMMMM          MMMM++   MMMMMMMMMMMM--   MMMMMM      MMMM  \n";
-        cout << "      ######@@  ++####  @@##  ##  ##################   MMMM++   MMMMMM     MMMMMM          MMMM++   MMMMMMMMMMMM--   MMMMMM      MMMM  \n";
-        cout << "      ####    ####..  ######  ##  ################..   MMMMMM     MMMM     MMMMMM    MMMMMMMMMMMM++   ..MMMMMMMMMM--   MMMMMM      MMMM  \n";
-        cout << "      ##    ####    ######  @@##  ################     MMMMMM             MMMMMM    MMMMMMMMMMMMMM             MMMMMM      MMMM  \n";
-        cout << "          ####    ########  ##MM  ################     MMMMMMMM         MMMMMMMM    MMMMMM  MMMMMM             MMMMMM      MMMM  \n";
-        cout << "        ##MM  ############  ##  ################       MMMMMMMM   MMMMMMMMMMMM    MMMMMM    MMMMMMMM             MMMMMM      MMMM  \n";
-        cout << "              ############++  ##  ##############           MMMMMMMMMMMMMMMMMMMMMM    MMMMMM      ::MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM      MMMM  \n";
-        cout << "              ############  --##  ############::             ..MMMMMMMMMMMM  MMMMMM    MMMMMM        MMMMMMMMMMMMMMMMMMMMMMMMMMMM      MMMM  \n";
-        cout << "                ##########  ####  ##########                                                                                        \n";
-        cout << "                      ######  ##  --########----------------------------------------------------------------------------------------------------  \n";
-        cout << "                            ..  ##  ##############################################################################################################  \n";
-        cout << "\n--- MENU DE OPERACOES ---";
-        cout << "\nArquivo: " << arquivoBinario;
-        cout << "\n1. Adicionar um elemento em uma posicao especifica";
-        cout << "\n2. Visualizar registros entre duas posicoes";
-        cout << "\n3. Alterar os dados de um registro";
-        cout << "\n4. Trocar dois registros de posicao";
-        cout << "\n5. Imprimir todos os registros";
-        cout << "\n0. Sair";
-        cout << "\n\nEscolha uma opcao: ";
-        
-        cin >> escolha;
-
-        if (cin.fail()) {
-            cout << "Opcao invalida. Por favor, digite um numero.\n";
-            cin.clear();
-            limparBufferCin();
-            escolha = -1;
-            continue;
-        }
-
-        switch (escolha) {
-            case 1: adicionarRegistro(arquivoBinario); break;
-            case 2: visualizarRegistros(arquivoBinario); break;
-            case 3: alterarRegistro(arquivoBinario); break;
-            case 4: trocarRegistros(arquivoBinario); break;
-            case 5: imprimirTodosRegistros(arquivoBinario); break;
-            case 0: cout << "Encerrando o programa...\n"; break;
-            default: cout << "Opcao invalida. Tente novamente.\n";
-        }
-
-    } while (escolha != 0);
-}
-
-// --- FUNÇÕES PRINCIPAIS DO MERGESORT ---
+// --- FUNÇÕES DE ORDENAÇÃO E PREPARAÇÃO ---
 
 string getPeriod(const string &line) {
     size_t pos1 = line.find(',');
@@ -380,25 +311,25 @@ string getPeriod(const string &line) {
     return line.substr(pos1 + 1, pos2 - pos1 - 1);
 }
 
-void mergeMultiway(int k, const string& entrada){
+void mergeMultiway(int k, const string& cabecalho) {
     const string INPUT_FILE_PREFIX = "temp/F";
     const string OUTPUT_FILE_PREFIX = "temp/S";
 
-    ifstream entradaCSV(entrada, ios::in);
-    if (!entradaCSV.is_open()) {
-        cout << "Erro: Nao foi possivel abrir o arquivo '" << entrada << "'.\n";
+    ifstream entradaBin("dados.bin", ios::binary);
+    if (!entradaBin.is_open()) {
+        cout << "Erro: Nao foi possivel abrir o arquivo 'dados.bin' para ordenacao.\n";
     } else {
-        string cabecalho;
-        getline(entradaCSV, cabecalho);
-
+        // Distribuição inicial a partir do dados.bin
         for (int i = 0; i < k; i++) {
             ofstream file(INPUT_FILE_PREFIX + to_string(i) + ".bin", ios::binary | ios::trunc);
         }
 
         int totalRegistros = 0;
-        string linha;
-        while (getline(entradaCSV, linha)) {
-            int len = int(linha.size());
+        int len;
+        while (entradaBin.read(reinterpret_cast<char *>(&len), sizeof(int))) {
+            string linha(len, '\0');
+            entradaBin.read(&linha[0], len);
+
             int idx = totalRegistros % k;
             ofstream fout(INPUT_FILE_PREFIX + to_string(idx) + ".bin", ios::binary | ios::app);
             fout.write(reinterpret_cast<const char *>(&len), sizeof(int));
@@ -406,12 +337,13 @@ void mergeMultiway(int k, const string& entrada){
             fout.close();
             totalRegistros++;
         }
-        entradaCSV.close();
+        entradaBin.close();
 
         long long blocoTamanho = 1;
         bool flip = true;
         auto inicio = chrono::high_resolution_clock::now();
 
+        // Passadas de intercalação
         while (blocoTamanho < totalRegistros) {
             string prefixIn = (flip ? INPUT_FILE_PREFIX : OUTPUT_FILE_PREFIX);
             string prefixOut = (flip ? OUTPUT_FILE_PREFIX : INPUT_FILE_PREFIX);
@@ -436,10 +368,10 @@ void mergeMultiway(int k, const string& entrada){
                 for (int i = 0; i < k; i++) {
                     lidos[i] = 0;
                     presente[i] = false;
-                    int len;
-                    if (inputs[i] && inputs[i].read(reinterpret_cast<char *>(&len), sizeof(int))) {
-                        registro[i].resize(len);
-                        inputs[i].read(&registro[i][0], len);
+                    int temp_len;
+                    if (inputs[i] && inputs[i].read(reinterpret_cast<char *>(&temp_len), sizeof(int))) {
+                        registro[i].resize(temp_len);
+                        inputs[i].read(&registro[i][0], temp_len);
                         lidos[i] = 1;
                         presente[i] = true;
                         somaPresentes++;
@@ -498,24 +430,23 @@ void mergeMultiway(int k, const string& entrada){
             flip = !flip;
         }
 
+        // Finalização: sobrescreve o dados.bin com o resultado ordenado
         string finalPrefix = (flip ? INPUT_FILE_PREFIX : OUTPUT_FILE_PREFIX);
-        const string ordenadoBin = "ordenado.bin";
-        const string ordenadoCSV = "ordenado.csv";
-
-        ifstream inputFinal(finalPrefix + "0.bin", ios::binary);
-        ofstream outputFinal(ordenadoBin, ios::binary | ios::trunc);
+        string arquivoFinalOrdenado = finalPrefix + "0.bin";
         
-        outputFinal << inputFinal.rdbuf();
-        inputFinal.close();
-        outputFinal.close();
+        remove("dados.bin");
+        if (rename(arquivoFinalOrdenado.c_str(), "dados.bin") != 0) {
+            perror("Erro ao renomear arquivo final");
+        }
 
-        ifstream inputBin(ordenadoBin, ios::binary);
-        ofstream outputCSV(ordenadoCSV, ios::trunc);
+        // Cria o arquivo CSV final para visualização
+        ifstream inputBin("dados.bin", ios::binary);
+        ofstream outputCSV("dados_ordenado.csv", ios::trunc);
         outputCSV << cabecalho << '\n';
-        int len;
-        while (inputBin.read(reinterpret_cast<char *>(&len), sizeof(int))) {
-            string linha_csv(len, '\0');
-            inputBin.read(&linha_csv[0], len);
+        int final_len;
+        while (inputBin.read(reinterpret_cast<char *>(&final_len), sizeof(int))) {
+            string linha_csv(final_len, '\0');
+            inputBin.read(&linha_csv[0], final_len);
             outputCSV << linha_csv << '\n';
         }
         inputBin.close();
@@ -525,14 +456,145 @@ void mergeMultiway(int k, const string& entrada){
         auto fim = chrono::high_resolution_clock::now();
         auto duracao = chrono::duration_cast<chrono::milliseconds>(fim - inicio).count();
         cout << "Tempo total de execucao: " << duracao << " ms\n";
-        cout << "Quantidade de arquivos: " << k << "\n";
+        cout << "Arquivo 'dados.bin' foi atualizado com os dados ordenados.\n";
+        cout << "Arquivo CSV ordenado para visualizacao: 'dados_ordenado.csv'\n";
     }
 }
 
+string converterCsvParaBinario() {
+    ifstream csv("property-transfer-statistics-march-2022-quarter-csv.csv");
+    if (!csv.is_open()) {
+        cout << "ERRO CRITICO: Arquivo 'property-transfer-statistics-march-2022-quarter-csv.csv' nao encontrado.\n";
+        return "";
+    }
+
+    ofstream bin("dados.bin", ios::binary | ios::trunc);
+    if (!bin.is_open()) {
+        cout << "ERRO CRITICO: Nao foi possivel criar o arquivo de trabalho 'dados.bin'.\n";
+        return "";
+    }
+    
+    string cabecalho;
+    getline(csv, cabecalho); // Lê o cabeçalho
+
+    string linha;
+    while (getline(csv, linha)) {
+        int len = linha.length();
+        bin.write(reinterpret_cast<const char*>(&len), sizeof(int));
+        bin.write(linha.c_str(), len);
+    }
+
+    cout << "Arquivo de dados convertido para 'dados.bin' com sucesso.\n";
+    csv.close();
+    bin.close();
+    return cabecalho; // Retorna o cabeçalho para ser usado depois
+}
+
+void finalizarPrograma() {
+    cout << "\nPrograma encerrando. Limpando arquivos...\n";
+
+    const string INPUT_FILE_PREFIX_CLEAN = "temp/F";
+    const string OUTPUT_FILE_PREFIX_CLEAN = "temp/S";
+
+    for (int i = 0; i < 20; i++) { // Limpa até 20 arquivos, um valor seguro
+        remove((INPUT_FILE_PREFIX_CLEAN + to_string(i) + ".bin").c_str());
+        remove((OUTPUT_FILE_PREFIX_CLEAN + to_string(i) + ".bin").c_str());
+    }
+    remove("temp_add.bin");
+    remove("temp_alt.bin");
+    remove("temp_swap.bin");
+    remove("dados.bin");
+    remove("dados_ordenado.csv");
+    
+    cout << "Arquivos temporarios e de trabalho removidos.\n";
+    cout << "Obrigado por usar o programa!\n";
+
+    cout << "Pressione Enter para sair...";
+    limparBufferCin();
+    cin.get();
+}
+
+// --- FUNÇÃO DE MENU ---
+
+void menu(const string& cabecalho) {
+    int escolha = 0;
+    do {
+        cout << "\n";
+        cout << "                      ########::                                                                                              \n";
+        cout << "                ####################::                                                                                        \n";
+        cout << "              ############################                                                                                    \n";
+        cout << "            ################################                                                                                  \n";
+        cout << "          ##########################mm########         MMMM++   MMMMMM     MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM     MMMMMMMMMMMMMM     \n";
+        cout << "        @@########################  ##########         MMMM++   MMMMMM     MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM   MMMMMMMMMMMMMMMM--   \n";
+        cout << "        ########################    ##########@@       MMMM++   MMMMMM     MMMMMMMM..................MMMMMM   MMMMMMMM     MMMMMMMM   \n";
+        cout << "      ######################MM  @@mm++############     MMMM++   MMMMMM     MMMMMM                   MMMMMM   MMMMMM           MMMMMM  \n";
+        cout << "      ####################    ####  ##############     MMMM++   MMMMMM     MMMMMM                   MMMMMM MMMMMM               MMMM  \n";
+        cout << "      ##################    ######  ################   MMMM++   MMMMMM     MMMMMM    ..MMMMMMMMMM++   MMMMMM MMMMmm     MMMM      MMMM  \n";
+        cout << "      ##############@@  MM##mm--##  ################   MMMM++   MMMMMM     MMMMMM    MMMMMMMMMMMM++   MMMMMM MMMM--   MMMMMM      MMMM  \n";
+        cout << "      ############    ####    ####  ################   MMMM++   MMMMMM     MMMMMM          MMMM++   MMMMMM MMMM--   MMMMMM      MMMM  \n";
+        cout << "      ##########    ####      ##  @@################   MMMM++   MMMMMM     MMMMMM          MMMM++   MMMMMMMMMMMM--   MMMMMM      MMMM  \n";
+        cout << "      ######@@  ++####  @@##  ##  ##################   MMMM++   MMMMMM     MMMMMM          MMMM++   MMMMMMMMMMMM--   MMMMMM      MMMM  \n";
+        cout << "      ####    ####..  ######  ##  ################..   MMMMMM     MMMM     MMMMMM    MMMMMMMMMMMM++   ..MMMMMMMMMM--   MMMMMM      MMMM  \n";
+        cout << "      ##    ####    ######  @@##  ################     MMMMMM             MMMMMM    MMMMMMMMMMMMMM             MMMMMM      MMMM  \n";
+        cout << "          ####    ########  ##MM  ################     MMMMMMMM         MMMMMMMM    MMMMMM  MMMMMM             MMMMMM      MMMM  \n";
+        cout << "        ##MM  ############  ##  ################       MMMMMMMM   MMMMMMMMMMMM    MMMMMM    MMMMMMMM             MMMMMM      MMMM  \n";
+        cout << "              ############++  ##  ##############           MMMMMMMMMMMMMMMMMMMMMM    MMMMMM      ::MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM      MMMM  \n";
+        cout << "              ############  --##  ############::             ..MMMMMMMMMMMM  MMMMMM    MMMMMM        MMMMMMMMMMMMMMMMMMMMMMMMMMMM      MMMM  \n";
+        cout << "                ##########  ####  ##########                                                                                        \n";
+        cout << "                      ######  ##  --########----------------------------------------------------------------------------------------------------  \n";
+        cout << "                            ..  ##  ##############################################################################################################  \n";
+        cout << "\n--- MENU DE OPERACOES ---";
+        cout << "\n1. Ordenar Arquivo de Dados";
+        cout << "\n2. Adicionar um elemento";
+        cout << "\n3. Visualizar registros";
+        cout << "\n4. Alterar um registro";
+        cout << "\n5. Trocar dois registros";
+        cout << "\n6. Imprimir todos os registros";
+        cout << "\n0. Sair";
+        cout << "\n\nEscolha uma opcao: ";
+        
+        cin >> escolha;
+
+        if (cin.fail()) {
+            cout << "Opcao invalida. Por favor, digite um numero.\n";
+            cin.clear();
+            limparBufferCin();
+            escolha = -1;
+            continue;
+        }
+
+        switch (escolha) {
+            case 1: {
+                int k_usuario;
+                cout << "\nDigite o numero de caminhos (k) para a ordenacao (ex: 16): ";
+                cin >> k_usuario;
+                if (cin.fail() || k_usuario < 2) {
+                    cout << "Valor de 'k' invalido. Usando o padrao k=16.\n";
+                    k_usuario = 16;
+                    cin.clear();
+                    limparBufferCin();
+                }
+                cout << "\nIniciando ordenacao com k = " << k_usuario << "...\n";
+                mergeMultiway(k_usuario, cabecalho);
+                break;
+            }
+            case 2: adicionarRegistro(); break;
+            case 3: visualizarRegistros(); break;
+            case 4: alterarRegistro(); break;
+            case 5: trocarRegistros(); break;
+            case 6: imprimirTodosRegistros(); break;
+            case 0: cout << "Saindo...\n"; break;
+            default: cout << "Opcao invalida. Tente novamente.\n";
+        }
+
+    } while (escolha != 0);
+}
+
 int main() {
-    const int k = 16; //Numero de arquivos temporários
-    string entrada = "dados.csv";
-    mergeMultiway(k, entrada);
-    menu();
+    string cabecalho = converterCsvParaBinario();
+    if (!cabecalho.empty()) { // Só executa o menu se a conversão foi bem-sucedida
+        menu(cabecalho);
+    }
+    finalizarPrograma();
     return 0;
 }
